@@ -1153,7 +1153,7 @@ function renderHome() {
       <span class="eyebrow">Kuwait School Leadership Standards · Principal training</span>
       <h1>${T("Great schools start with a leader who knows <span>what great looks like.</span>", "المدارس العظيمة تبدأ بقائد يعرف <span>كيف تبدو العظمة.</span>")}</h1>
       <p class="lead">Learn the five leadership standards one step at a time, through real stories from Kuwaiti schools. Practise spotting each level until it becomes second nature, then prove it in a short challenge.</p>
-      <div class="row">${cta}${listenBtn("welcome", NARR.welcome, "Listen to the welcome (2 min)")}</div>
+      <div class="row">${P.started ? "" : cta}${listenBtn("welcome", NARR.welcome, "Listen to the welcome (2 min)")}</div>
       ${P.started ? `<p class="small muted">${esc(P.name ? P.name + ", you" : "You")} have ${P.xp.toLocaleString()} XP and ${pearlsTotal()} pearls. Next: ${esc(n.kind === "area" ? n.code + " " + areaBy(n.code).en : n.kind === "test" ? stdBy(n.code).en + " challenge" : n.kind === "orient" ? "the Level Finder" : n.kind === "sa" ? "self-assess " + stdBy(n.code).en : "your leadership profile")}.</p>` : `<p class="small muted">Private and developmental. Your progress is never used to appraise you.</p><p class="small">Continuing on a new device? ${SYNC.avail ? `<button class="linkbtn" data-act="syncsheet" data-notr>${T("Enter your sync code", "أدخل رمز المزامنة")}</button> <span class="muted">·</span> ` : ""}<button class="linkbtn" data-act="restorehome">Restore my progress from a backup file</button></p>`}
     </div>
     ${heroArt()}
@@ -1195,6 +1195,15 @@ function renderHome() {
     <p class="quote">Every student in Kuwait deserves a school led with purpose.</p>
     <p class="muted">About 10 minutes per area. Learn on your laptop or phone, and pick up where you left off.</p>
     ${cta}
+  </section>
+  <section class="card stack home-bk" id="homebk">
+    <div class="stack" style="gap:6px"><span class="eyebrow" data-notr>${T("Your progress", "تقدمك")}</span>
+      <h3 data-notr>${P.started ? T("Back up your progress, or bring in a saved backup", "انسخ تقدمك احتياطيًا، أو استورد نسخة محفوظة") : T("Already started on another device?", "بدأت بالفعل على جهاز آخر؟")}</h3>
+      <p class="muted small" data-notr>${P.started ? T("A backup is a small file with all your points, pearls, answers and self-assessment. Keep it in your email or Google Drive, and use it to continue on another device or if this browser is cleared.", "النسخة الاحتياطية ملف صغير يحفظ نقاطك ولآلئك وإجاباتك وتقييمك الذاتي. احتفظ به في بريدك الإلكتروني أو Google Drive، واستخدمه لتتابع على جهاز آخر أو إذا مُسحت بيانات هذا المتصفح.") : T("If you saved a backup file before, open it here to continue from where you left off.", "إذا حفظت ملف نسخة احتياطية من قبل، افتحه هنا لتتابع من حيث توقفت.")}</p></div>
+    <div class="row">${P.started ? `<button class="btn btn-primary" data-act="backup" data-st="#homebkstatus">Back up my progress</button>` : ""}
+      <label class="btn" for="homerestore">Restore my progress (from a backup file)</label><input type="file" id="homerestore" accept=".json,application/json" hidden>
+      ${SYNC.avail ? `<button class="btn btn-ghost" data-act="syncsheet" data-notr>${T("Enter your sync code", "أدخل رمز المزامنة")}</button>` : ""}</div>
+    <div id="homebkstatus" class="small" role="status"></div>
   </section>
   ${P.started ? `<section class="stack" style="text-align:center;justify-items:center;padding:8px 0 4px">
     <p class="small muted">Demonstrating the academy? Clear all progress to show it from the very beginning.</p>
@@ -2236,8 +2245,8 @@ async function backupProgress(statusSel) {
   } catch (e) { say(e && e.code === "declined" ? "Backup cancelled." : "The backup didn't download. Please try again."); }
 }
 let pendingRestore = null;
-function readBackupFile(file) {
-  const say = (m) => { const el = $("#bkstatus"); if (el) { el.innerHTML = m; el.scrollIntoView({ block: "nearest" }); } };
+function readBackupFile(file, statusSel) {
+  const say = (m) => { const el = $(statusSel || "#bkstatus"); if (el) { el.innerHTML = m; el.scrollIntoView({ block: "nearest" }); } };
   if (!file) return;
   const r = new FileReader();
   r.onload = () => {
@@ -2411,7 +2420,7 @@ document.addEventListener("click", (e) => {
     case "audtest": testArabicAudio(el.dataset.st); break;
     case "bklater": P.backupMilestones = milestones(); save(); { const b = $(".bk-banner"); if (b) b.remove(); } break;
     case "restore2": applyRestore(); break;
-    case "restorecancel": pendingRestore = null; { const el2 = $("#bkstatus"); if (el2) el2.innerHTML = ""; } break;
+    case "restorecancel": pendingRestore = null; ["#bkstatus", "#homebkstatus"].forEach((q) => { const el2 = $(q); if (el2) el2.innerHTML = ""; }); break;
     case "restorehome": settingsSheet(); break;
     case "allpri": { V.allPri = !V.allPri; const y = window.scrollY; render(); window.scrollTo(0, y); break; }
     case "certedit": V.editCert = true; render(); break;
@@ -2437,6 +2446,7 @@ document.addEventListener("click", (e) => {
 });
 document.addEventListener("change", (e) => {
   const t = e.target;
+  if (t.id === "homerestore") { readBackupFile(t.files && t.files[0], "#homebkstatus"); t.value = ""; return; }
   if (t.dataset.rans && V.screen === "sa") { const st = saStd(V.code); st.answers[t.dataset.rans] = { ...(st.answers[t.dataset.rans] || {}), v: t.value }; save(); render(); }
   if (t.dataset.pri) { let pr = (P.priorities || []).slice(); if (t.checked) { if (pr.length < 3) pr.push(t.dataset.pri); } else pr = pr.filter((c) => c !== t.dataset.pri); P.priorities = pr; save(); const y = window.scrollY; render(); window.scrollTo(0, y); }
 });
