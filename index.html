@@ -69,17 +69,37 @@
 </button>
 <script>
 (function () {
-  var s = document.getElementById("la-splash"); if (!s) return;
-  var done = false;
-  function go() {
-    if (done) return; done = true;
+  var first = document.getElementById("la-splash"); if (!first) return;
+  var tpl = first.cloneNode(true), cur = null, after = null, busy = false;
+  function onKey(e) { if (e.key === "Enter" || e.key === " " || e.key === "Escape") { e.preventDefault(); e.stopPropagation(); hide(); } }
+  function hide() {
+    if (!cur || busy) return; busy = true; var s = cur;
     document.removeEventListener("keydown", onKey, true);
     s.classList.add("out");
-    setTimeout(function () { if (s.parentNode) s.parentNode.removeChild(s); var m = document.querySelector("#app, main, h1"); if (m && m.focus) { try { m.setAttribute("tabindex", m.getAttribute("tabindex") || "-1"); m.focus({ preventScroll: true }); } catch (e) {} } }, 460);
+    setTimeout(function () {
+      if (s.parentNode) s.parentNode.removeChild(s); cur = null; busy = false;
+      var cb = after; after = null; if (cb) cb();
+    }, 460);
   }
-  function onKey(e) { if (e.key === "Enter" || e.key === " " || e.key === "Escape") { e.preventDefault(); e.stopPropagation(); go(); } }
-  s.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); go(); });
-  document.addEventListener("keydown", onKey, true);
+  function wire(s) {
+    cur = s;
+    s.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); hide(); });
+    document.addEventListener("keydown", onKey, true);
+  }
+  /* show the startup screen again; cb runs after it is dismissed */
+  window.laShowSplash = function (cb) {
+    if (cur) return; after = cb || null;
+    var s = tpl.cloneNode(true); document.body.insertBefore(s, document.body.firstChild); wire(s);
+    try { s.focus({ preventScroll: true }); } catch (e) {}
+  };
+  /* the Leadership Academy logo in the top bar shows the startup screen, then goes home as before */
+  var passing = false;
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest && e.target.closest("#topbar .brand"); if (!b || passing) return;
+    e.preventDefault(); e.stopPropagation();
+    window.laShowSplash(function () { passing = true; try { b.click(); } finally { passing = false; } });
+  }, true);
+  wire(first);
 })();
 </script>
 <!-- ===== end of startup screen ===== -->
@@ -1315,7 +1335,7 @@ function finderBox(compact) {
 function renderTop() {
   const rk = rankOf(P.xp);
   $("#topbar").innerHTML = `<div class="wrap">
-    <button class="brand" data-act="home" aria-label="Leadership Academy, home">${markSvg}<span class="brand-name">Leadership Academy<small>Kuwait School Leadership Standards</small></span></button>
+    <button class="brand" data-act="home" aria-label="Leadership Academy: show the start screen, then home" title="Show the start screen">${markSvg}<span class="brand-name">Leadership Academy<small>Kuwait School Leadership Standards</small></span></button>
     ${P.started ? `<div class="hud">
       <span class="chip chip-xp tnum" title="Points (XP): earned for correct answers, areas, challenges and self-assessment">${I.bolt.replace("<svg", '<svg width="14" height="14" fill="currentColor"')} ${P.xp.toLocaleString()} XP</span>
       <span class="chip tnum hide-sm" title="Pearls: up to 3 per area, 69 in all"><span class="pearl"></span>${pearlsTotal()}</span>
