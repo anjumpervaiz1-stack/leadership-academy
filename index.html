@@ -1,4 +1,88 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!-- ===== Startup screen (Rising levels): shown each time the app opens; tap, click or press a key to continue ===== -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@300;400;600;700&display=swap">
+<style>
+#la-splash{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;margin:0;padding:0;border:0;width:100%;height:100%;
+  background:#0B2A3C;color:#F4F1EA;font-family:"Readex Pro","IBM Plex Sans Arabic",system-ui,sans-serif;text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:opacity .45s ease}
+#la-splash.out{opacity:0;pointer-events:none}
+#la-splash:focus{outline:none}#la-splash:focus-visible .ls-btn{outline:3px solid #9FC3D6;outline-offset:4px}
+#la-splash .ls-wrap{box-sizing:border-box;width:100%;height:100%;max-width:760px;padding:max(44px,env(safe-area-inset-top)) 24px max(30px,env(safe-area-inset-bottom));display:flex;flex-direction:column;justify-content:space-between;align-items:center;gap:20px}
+#la-splash .ls-head,#la-splash .ls-foot,#la-splash .ls-art{display:flex;flex-direction:column;align-items:center}
+#la-splash .ls-head{gap:8px}
+#la-splash .ls-org{font-size:12px;letter-spacing:3px;text-transform:uppercase;color:#9FC3D6}
+#la-splash .ls-ar{font-size:clamp(34px,9vw,64px);font-weight:700;line-height:1.2}
+#la-splash .ls-en{font-size:clamp(26px,7vw,48px);font-weight:600;line-height:1.1}
+#la-splash .ls-what{margin:10px 0 0;font-size:clamp(15px,3.4vw,24px);line-height:1.45;max-width:600px}
+#la-splash .ls-what-ar{margin:0;font-size:clamp(14px,3.2vw,22px);line-height:1.6;max-width:600px;color:#C9D6DE}
+#la-splash .ls-art{gap:12px}
+#la-splash .ls-bars{display:flex;align-items:flex-end;gap:clamp(12px,3.4vw,26px);height:clamp(150px,32vh,380px)}
+#la-splash .ls-bar{display:flex;flex-direction:column;align-items:center;gap:8px;height:100%;justify-content:flex-end}
+#la-splash .ls-bar i{display:block;width:clamp(50px,13vw,110px);border-radius:10px 10px 4px 4px;transform-origin:bottom;animation:lsRise .9s ease-out both}
+#la-splash .ls-bar span{font-size:clamp(11px,2.6vw,17px);color:#C9D6DE}
+#la-splash .ls-grow{font-size:clamp(13px,2.8vw,18px);color:#9FC3D6}
+#la-splash .ls-foot{gap:16px}
+#la-splash .ls-do{display:flex;align-items:center;gap:10px;font-size:clamp(14px,3vw,20px);font-weight:600}
+#la-splash .ls-do b{width:4px;height:4px;border-radius:50%;background:#9FC3D6}
+#la-splash .ls-btn{display:inline-flex;align-items:center;min-height:48px;padding:0 26px;border-radius:999px;background:#F4F1EA;color:#0B2A3C;font-size:clamp(15px,3vw,20px);font-weight:600;animation:lsBreathe 2.4s ease-in-out infinite}
+#la-splash .ls-click{display:none}
+@keyframes lsRise{from{transform:scaleY(.05)}to{transform:scaleY(1)}}
+@keyframes lsBreathe{0%,100%{opacity:1}50%{opacity:.55}}
+/* laptop and wide screens: text on one side, bars on the other */
+@media (min-width:1000px) and (min-aspect-ratio:5/4){
+  #la-splash .ls-wrap{max-width:1280px;padding:72px 96px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:auto auto;column-gap:72px;row-gap:28px;align-content:center;text-align:left}
+  #la-splash .ls-head{grid-column:1;grid-row:1;align-items:flex-start}
+  #la-splash .ls-foot{grid-column:1;grid-row:2;align-items:flex-start}
+  #la-splash .ls-art{grid-column:2;grid-row:1/span 2}
+  #la-splash .ls-ar{text-align:left;font-size:54px}#la-splash .ls-en{font-size:56px;white-space:nowrap}
+  #la-splash .ls-what{font-size:24px}#la-splash .ls-what-ar{font-size:21px;text-align:left}
+  #la-splash .ls-bars{height:min(56vh,520px)}#la-splash .ls-bar i{width:104px}
+  #la-splash .ls-tap{display:none}#la-splash .ls-click{display:inline}
+}
+@media (pointer:fine){#la-splash .ls-tap{display:none}#la-splash .ls-click{display:inline}}
+@media (max-height:640px){#la-splash .ls-what-ar,#la-splash .ls-grow{display:none}#la-splash .ls-bars{height:120px}}
+@media (prefers-reduced-motion:reduce){#la-splash .ls-bar i,#la-splash .ls-btn{animation:none}#la-splash{transition:none}}
+</style>
+<button type="button" id="la-splash" aria-label="Open the Leadership Academy. افتح أكاديمية القيادة">
+<span class="ls-wrap">
+<span class="ls-head">
+<span class="ls-org">World Learning Services</span>
+<span class="ls-ar" dir="rtl" lang="ar">أكاديمية القيادة</span>
+<span class="ls-en">Leadership Academy</span>
+<span class="ls-what">Learn Kuwait’s School Leadership Standards and what it takes to lead a great school.</span>
+<span class="ls-what-ar" dir="rtl" lang="ar">تعلّم معايير القيادة المدرسية في الكويت، وما يلزم لتقود مدرسة ناجحة.</span>
+</span>
+<span class="ls-art">
+<span class="ls-bars" aria-hidden="true">
+<span class="ls-bar"><i style="height:28%;background:#D9466B"></i><span>Novice</span></span>
+<span class="ls-bar"><i style="height:50%;background:#E0A126;animation-delay:.15s"></i><span>Developing</span></span>
+<span class="ls-bar"><i style="height:72%;background:#26A383;animation-delay:.3s"></i><span>Proficient</span></span>
+<span class="ls-bar"><i style="height:92%;background:#4C8DF0;animation-delay:.45s"></i><span>Expert</span></span>
+</span>
+<span class="ls-grow">Grow from Novice to Expert, one step at a time.</span>
+</span>
+<span class="ls-foot">
+<span class="ls-do"><span>Learn</span><b aria-hidden="true"></b><span>Practise</span><b aria-hidden="true"></b><span>Self-assess</span></span>
+<span class="ls-btn"><span class="ls-tap">Tap to begin · <span lang="ar">اضغط للبدء</span></span><span class="ls-click">Click anywhere to begin · <span lang="ar">انقر للبدء</span></span></span>
+</span>
+</span>
+</button>
+<script>
+(function () {
+  var s = document.getElementById("la-splash"); if (!s) return;
+  var done = false;
+  function go() {
+    if (done) return; done = true;
+    document.removeEventListener("keydown", onKey, true);
+    s.classList.add("out");
+    setTimeout(function () { if (s.parentNode) s.parentNode.removeChild(s); var m = document.querySelector("#app, main, h1"); if (m && m.focus) { try { m.setAttribute("tabindex", m.getAttribute("tabindex") || "-1"); m.focus({ preventScroll: true }); } catch (e) {} } }, 460);
+  }
+  function onKey(e) { if (e.key === "Enter" || e.key === " " || e.key === "Escape") { e.preventDefault(); e.stopPropagation(); go(); } }
+  s.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); go(); });
+  document.addEventListener("keydown", onKey, true);
+})();
+</script>
+<!-- ===== end of startup screen ===== -->
+
 <title>Leadership Academy Bilingual</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
