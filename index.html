@@ -36,6 +36,9 @@
 #la-ov .ov-box{width:min(100%,1100px,calc((100vh - 120px) * 16 / 9));display:flex;flex-direction:column;gap:14px;align-items:center}
 #la-ov .ov-vid{width:100%;aspect-ratio:16/9;background:#000;border-radius:12px}
 #la-ov .ov-acts{display:flex;flex-wrap:wrap;gap:12px;justify-content:center}
+#la-ov .ov-lang{display:flex;gap:6px;padding:4px;border-radius:999px;background:rgba(159,195,214,.15)}
+#la-ov .ov-lang button{min-height:36px;padding:0 16px;border:0;border-radius:999px;background:transparent;color:#C9D6DE;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer}
+#la-ov .ov-lang button[aria-pressed=true]{background:#F4F1EA;color:#0B2A3C}
 #la-ov .ls-btn{min-height:48px;padding:0 26px;border-radius:999px;background:#F4F1EA;color:#0B2A3C;font-size:16px;font-weight:600}
 @keyframes lsRise{from{transform:scaleY(.05)}to{transform:scaleY(1)}}
 @keyframes lsBreathe{0%,100%{opacity:1}50%{opacity:.55}}
@@ -76,17 +79,28 @@
 </span>
 <span class="ls-foot">
 <span class="ls-do"><span>Learn</span><b aria-hidden="true"></b><span>Practise</span><b aria-hidden="true"></b><span>Self-assess</span></span>
-<span class="ls-acts"><button type="button" class="ls-btn ls-begin"><span class="ls-tap">Tap to begin · <span lang="ar">اضغط للبدء</span></span><span class="ls-click">Click anywhere to begin · <span lang="ar">انقر للبدء</span></span></button><button type="button" class="ls-watch" aria-haspopup="dialog"><span class="ls-play" aria-hidden="true"></span><span class="ls-wt"><span>Watch a 2½-minute overview first</span><span lang="ar" dir="rtl">شاهد عرضًا تعريفيًا قصيرًا (بالإنجليزية)</span></span></button></span>
+<span class="ls-acts"><button type="button" class="ls-btn ls-begin"><span class="ls-tap">Tap to begin · <span lang="ar">اضغط للبدء</span></span><span class="ls-click">Click anywhere to begin · <span lang="ar">انقر للبدء</span></span></button><button type="button" class="ls-watch" aria-haspopup="dialog"><span class="ls-play" aria-hidden="true"></span><span class="ls-wt"><span>Watch a 2½-minute overview first</span><span lang="ar" dir="rtl">شاهد عرضًا تعريفيًا قصيرًا أولًا</span></span></button></span>
 </span>
 </span>
 </div>
-<div id="la-ov" role="dialog" aria-modal="true" aria-label="Overview video. العرض التعريفي" hidden><div class="ov-box"><video class="ov-vid" controls playsinline preload="none" poster="video/app_overview_poster.jpg"><source src="video/app_overview.mp4" type="video/mp4">Your browser cannot play this video.</video><div class="ov-acts"><button type="button" class="ls-btn ov-begin">Begin the app · <span lang="ar">ابدأ التطبيق</span></button><button type="button" class="ls-watch ov-close">Back · <span lang="ar">رجوع</span></button></div></div></div>
+<div id="la-ov" role="dialog" aria-modal="true" aria-label="Overview video. العرض التعريفي" hidden><div class="ov-box"><div class="ov-lang" role="group" aria-label="Video language · لغة الفيديو"><button type="button" data-vl="en" lang="en">English</button><button type="button" data-vl="ar" lang="ar">العربية</button></div><video class="ov-vid" controls playsinline preload="none">Your browser cannot play this video.</video><div class="ov-acts"><button type="button" class="ls-btn ov-begin">Begin the app · <span lang="ar">ابدأ التطبيق</span></button><button type="button" class="ls-watch ov-close">Back · <span lang="ar">رجوع</span></button></div></div></div>
 <script>
 (function () {
   var first = document.getElementById("la-splash"); if (!first) return;
   var tpl = first.cloneNode(true), cur = null, after = null, busy = false;
   var ov = document.getElementById("la-ov"), vid = ov && ov.querySelector("video");
-  function ovOpen() { if (!ov) return; ov.hidden = false; try { var pr = vid.play(); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {} try { vid.focus(); } catch (e) {} }
+  var VIDS = { en: ["video/app_overview.mp4", "video/app_overview_poster.jpg"], ar: ["video/app_overview_ar.mp4", "video/app_overview_ar_poster.jpg"] }, vlang = null;
+  function setVid(l, play) {
+    if (!vid || l === vlang) { if (play) { try { var p0 = vid.play(); if (p0 && p0.catch) p0.catch(function () {}); } catch (e) {} } return; }
+    vlang = l; try { vid.pause(); } catch (e) {}
+    vid.poster = VIDS[l][1]; vid.src = VIDS[l][0];
+    ov.querySelectorAll(".ov-lang button").forEach(function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-vl") === l ? "true" : "false"); });
+    if (play) { try { var p = vid.play(); if (p && p.catch) p.catch(function () {}); } catch (e) {} }
+  }
+  /* if a video file cannot be loaded (for example the Arabic one is not uploaded yet), fall back to the other language */
+  if (vid) vid.addEventListener("error", function () { var o = vlang === "ar" ? "en" : vlang === "en" ? null : null; if (o) setVid(o, !vid.paused || true); });
+  function appLang() { return (document.documentElement.lang || "").slice(0, 2) === "ar" ? "ar" : "en"; }
+  function ovOpen() { if (!ov) return; ov.hidden = false; setVid(appLang(), false); try { var pr = vid.play(); if (pr && pr.catch) pr.catch(function () {}); } catch (e) {} try { vid.focus(); } catch (e) {} }
   function ovClose(begin) {
     if (!ov || ov.hidden) return; try { vid.pause(); } catch (e) {} ov.hidden = true;
     if (begin) hide(); else { var w = cur && cur.querySelector(".ls-watch"); if (w) w.focus(); }
@@ -95,6 +109,7 @@
     ov.querySelector(".ov-begin").addEventListener("click", function (e) { e.stopPropagation(); ovClose(true); });
     ov.querySelector(".ov-close").addEventListener("click", function (e) { e.stopPropagation(); ovClose(false); });
     ov.addEventListener("click", function (e) { if (e.target === ov) ovClose(false); });
+    ov.querySelectorAll(".ov-lang button").forEach(function (b) { b.addEventListener("click", function (e) { e.stopPropagation(); setVid(b.getAttribute("data-vl"), true); }); });
   }
   function onKey(e) {
     if (ov && !ov.hidden) { if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); ovClose(false); } return; }
